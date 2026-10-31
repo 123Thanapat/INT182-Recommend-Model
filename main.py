@@ -1,44 +1,54 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
-from recommender import get_recommendations_by_cuisine
-from dotenv import load_dotenv
-load_dotenv()  # โหลดค่าจากไฟล์ .env เข้าสู่ระบบ
+from recommender import get_recommendations_by_cuisine_and_ingredients
 
-app = FastAPI(title="Recipe Recommendation API", version="1.0")
+app = FastAPI(
+    title="Recipe Recommendation API",
+    description=(
+        "API แนะนำสูตรอาหารจากส่วนผสมและประเภทอาหาร (คืนค่า Top 3 เสมอ)"
+    ),
+    version="3.1.0",
+)
 
-# กำหนดโครงสร้าง Request Body ด้วย Pydantic
-class RecommendationRequest(BaseModel):
-    ingredients: List[str]
-    cuisines: str
 
 @app.get("/")
-def home():
-    return {"message": "Recipe Recommendation API is running successfully!"}
+def read_root():
+  return {"message": "Recipe Recommendation API is ready!"}
+
+
+# Pydantic Model สำหรับรับ ingredients และ cuisines
+class CuisineIngredientRequest(BaseModel):
+  ingredients: List[str]  # เช่น ["chicken", "garlic", "chili"]
+  cuisines: str  # เช่น "Thai", "Italian", "Mexican"
+
 
 @app.post("/recommend")
-def recommend_recipes(request: RecommendationRequest):
-    try:
-        # เรียกใช้ฟังก์ชันประมวลผลจาก recommender.py
-        results = get_recommendations_by_cuisine(
-            user_ingredients=request.ingredients,
-            target_cuisine=request.cuisines,
-            top_n=3
-        )
-        
-        if not results:
-            return {
-                "status": "success",
-                "message": f"No recipes found for cuisine: {request.cuisines}",
-                "data": []
-            }
+def recommend_by_cuisine_endpoint(payload: CuisineIngredientRequest):
+  """รับ JSON Body ที่มีทั้งส่วนผสมและประเภทอาหาร และคืนค่าผลลัพธ์ Top 3 เสมอ"""
+  try:
+    if not payload.ingredients:
+      raise HTTPException(
+          status_code=400, detail="กรุณาระบุรายการส่วนผสม (ingredients)"
+      )
+    if not payload.cuisines:
+      raise HTTPException(
+          status_code=400, detail="กรุณาระบุประเภทอาหาร (cuisines)"
+      )
 
-        return {
-            "status": "success",
-            "cuisine": request.cuisines,
-            "matched_count": len(results),
-            "data": results
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    recommendations = get_recommendations_by_cuisine_and_ingredients(
+        user_ingredients=payload.ingredients, target_cuisine=payload.cuisines
+    )
+
+    if not recommendations:
+      raise HTTPException(
+          status_code=404, detail="ไม่พบสูตรอาหารที่ตรงกับเงื่อนไข"
+      )
+
+    return {
+        "ingredients": payload.ingredients,
+        "cuisines": payload.cuisines,
+        "recipes": recommendations,  # ส่งกลับมา Top 3 เสมอ
+    }
+  except Exception as e:
+    raise HTTPException(status_code=500, detail=str(e))
