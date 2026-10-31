@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
 from recommender import get_recommendations_by_cuisine
+from dotenv import load_dotenv
+load_dotenv()  # โหลดค่าจากไฟล์ .env เข้าสู่ระบบ
 
 app = FastAPI(title="Recipe Recommendation API", version="1.0")
 

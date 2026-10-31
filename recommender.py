@@ -4,7 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import os
 
-DB_PATH = "/data/recipes.db" if os.path.exists("/data") else "recipes.db"
+DB_PATH = os.getenv("DB_PATH", "recipes.db")
 
 def get_recommendations_by_cuisine(user_ingredients: list, target_cuisine: str, top_n: int = 3):
     """
