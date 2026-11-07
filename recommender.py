@@ -74,9 +74,20 @@ def get_recommendations_by_cuisine_and_ingredients(
       except:
         pass
 
+    # เพิ่มการจัดการและดึงค่า ingredients_raw
+    ingredients_raw_val = row.get("ingredients_raw") if "ingredients_raw" in row else None
+    if isinstance(ingredients_raw_val, str) and (
+        ingredients_raw_val.startswith("[") or ingredients_raw_val.startswith("{")
+    ):
+      try:
+        ingredients_raw_val = json.loads(ingredients_raw_val)
+      except:
+        pass
+
     results.append({
         "name": row.get("name"),
         "ingredients": ingredients_val,
+        "ingredients_raw": ingredients_raw_val,
         "steps": steps_val,
         "cuisines": row.get("cuisines"),
         "score": round(float(row["similarity_score"]), 4),
