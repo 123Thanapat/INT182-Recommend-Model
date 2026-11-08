@@ -19,9 +19,9 @@ app.add_middleware(
     allow_headers=["*"],  # อนุญาตทุก Header
 )
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def read_root():
-  return {"message": "Recipe Recommendation API is ready!"}
+    return {"message": "Recipe Recommendation API is ready!"}
 
 
 # Pydantic Model สำหรับรับ ingredients และ cuisines
