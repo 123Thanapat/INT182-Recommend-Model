@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
 from recommender import get_recommendations_by_cuisine_and_ingredients
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Recipe Recommendation API",
@@ -10,7 +11,13 @@ app = FastAPI(
     ),
     version="3.1.0",
 )
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # อนุญาตทุก Origin (หรือเปลี่ยนเป็น URL เว็บคุณ)
+    allow_credentials=True,
+    allow_methods=["*"],  # อนุญาตทุก Method (GET, POST, OPTIONS ฯลฯ)
+    allow_headers=["*"],  # อนุญาตทุก Header
+)
 
 @app.get("/")
 def read_root():
